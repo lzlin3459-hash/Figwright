@@ -123,8 +123,52 @@ OriginLab EULA，FigFlow 不做、也不能被用于此目的。
 
 ---
 
-## 六、边界与路线图
+## 六、常见问题（FAQ）
+
+**Q1：“无需 Origin”到底是什么意思？**
+就是图**不是用 Origin 画的**。FigFlow 用开源的 matplotlib 在自带 Python 环境里渲染，
+所以你**不必购买或安装 Origin/OriginPro**，也不会出现 Origin 学习版那种满幅 demo 水印。
+
+**Q2：那它和用 Origin 出图，差别在哪？**
+
+| | FigFlow（免费开源版） | 正版 Origin 工作流 |
+| --- | --- | --- |
+| 绘图引擎 | 开源 matplotlib | Origin/OriginPro |
+| 是否要装/买 Origin | 不需要 | 需要 |
+| 水印 | 无 | 付费激活后无，学习/试用版有 |
+| 产物 | 可编辑 SVG + 高清 PNG/PDF | PNG/PDF + Origin 工程 `.opju` |
+| 二次编辑 | Inkscape/Illustrator/PPT 改 SVG，或改数据重画 | 在 Origin 内按图层编辑 |
+| 能否得到 `.opju` | **不能** | 能 |
+
+**Q3：我就是需要 `.opju`，要在 Origin 里继续做峰拟合、和组里 Origin 流程对接，怎么办？**
+这类需求本质上需要一份**正版激活的 OriginLab 授权**——任何工具都无法在用户没有正版 Origin
+的情况下，合法产出可用的 `.opju`。FigFlow **不会、也不能**通过破解或补丁去满足它。
+你可以：① 使用正版 Origin，并把 FigFlow 当作快速选图/初稿工具；② 等待下方“可选 Origin
+后端”，在你本机已有正版 Origin 时额外导出 `.opju`。
+
+**Q4：不用 Origin，矢量图拿什么改？**
+`result.svg` 是标准矢量格式，免费的 **Inkscape**、Adobe Illustrator、 PowerPoint 都能打开，
+可直接改文字、颜色、线宽、版式；不方便手改时，改数据或换个 `--intent` 让 FigFlow 重画即可。
+
+**Q5：已经装了正版 Origin 的人能用 FigFlow 吗？**
+能。当前版本独立产出 SVG/PNG/PDF，与 Origin 互不影响；未来的“可选 Origin 后端”只会在
+**检测到本机已安装并激活的正版 Origin** 时才点亮，绝不捆绑、不安装、不破解 Origin。
+
+---
+
+## 七、边界与路线图
+
+**当前边界**
 
 - 不产出 Origin 工程文件（`.opju`）；可编辑性由 SVG 承担。
-- 当前为 MVP：自动选图覆盖 40 类图种，建议关键图仍按 `recommend → 人工确认 → draw` 流程。
+- 不安装、不修改、不绕过任何 Origin 授权或水印；不含 OriginLab 软件/模板/Logo 素材。
+- 当前为 MVP：自动选图覆盖 40 类图种，关键图建议走 `recommend → 人工确认 → draw` 流程。
 - 平台：64 位 Windows + Python 3.11/3.12；macOS/Linux 暂不支持。
+
+**规划中（Roadmap）**
+
+- **可选正版 Origin 后端（opt-in）**：仅当检测到本机已安装并激活的正版 Origin/OriginPro
+  时才启用，通过官方 `originpro` 接口在 matplotlib 产物之外**额外导出 `.opju`**，方便已有
+  授权、需要与课题组 Origin 流程对接的用户。该功能不捆绑、不安装、不破解 Origin，
+  未检测到正版时保持纯 matplotlib 路线、不影响免费用户。
+- 更多图种与双语（中英）界面、图形化安装器等。
