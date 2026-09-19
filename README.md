@@ -38,26 +38,26 @@
 
 ## How it works
 
-```text
- data file                your intent
- (CSV/TXT/XLS/XLSX)       ("compare two 19F spectra …")
-        |                         |
-        v                         v
- +------------+          +------------------+
- | 1 Ingest   |          | 2 Recommend      |  real fit + rank across 40 chart types
- | read-only  | -------> |  auto-select     |
- +------------+          +--------+---------+
-                                  v
-                         +------------------+
-                         | 3 Confirm        |  column roles - confidence - ambiguity gate
-                         +--------+---------+
-                                  v
-                         +------------------+
-                         | 4 Render         |  matplotlib -> SVG + PNG(300dpi) + PDF
-                         +------------------+
-                                  |
-                                  v
-              <source>_Figwright_<timestamp>/  (next to your data)
+```mermaid
+flowchart TD
+    A["<b>Data file</b><br/>CSV · TXT · XLS · XLSX"]
+    B["<b>Your intent</b> in plain language<br/>e.g. “compare two 19F spectra”"]
+    C["<b>1 · Ingest</b><br/>read-only table inspection"]
+    D["<b>2 · Recommend</b><br/>real fit + ranking across 40 chart types"]
+    E["<b>3 · Confirm</b><br/>column roles · confidence · ambiguity gate"]
+    F["<b>4 · Render</b> · matplotlib<br/>SVG + PNG (300 dpi) + PDF"]
+    G["📁 &lt;source&gt;_Figwright_&lt;timestamp&gt;/<br/>saved next to your data"]
+
+    A --> C --> D
+    B --> D
+    D --> E --> F --> G
+
+    classDef input  fill:#eef4ff,stroke:#2C5AA0,stroke-width:1px,color:#16324f;
+    classDef step   fill:#ffffff,stroke:#5b7fa6,stroke-width:1px,color:#16324f;
+    classDef output fill:#eafaf0,stroke:#27AE60,stroke-width:1px,color:#14532d;
+    class A,B input;
+    class C,D,E,F step;
+    class G output;
 ```
 
 每一次出图都带 `figwright_report.json`：图种、列映射、置信度、数据 SHA-256、画布尺寸全程可溯源。
