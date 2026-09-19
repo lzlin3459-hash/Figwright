@@ -1,0 +1,6 @@
+@echo off
+REM Pure-ASCII launcher: no Chinese path literals here (safe on GBK/936 PCs).
+REM The bridge reads figflow-home.json (UTF-8) and spawns the venv interpreter.
+py -3 "%~dp0_bootstrap.py" %*
+if errorlevel 9009 python "%~dp0_bootstrap.py" %*
+exit /b %errorlevel%
