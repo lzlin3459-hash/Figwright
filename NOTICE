@@ -19,15 +19,30 @@ records the following changes:
    column-role inference / scientific preparation, template specifications,
    plot-plan construction, scientific palettes, and the matplotlib-based
    publication preview renderer.
-2. Removed and not redistributed: the Origin/OriginPro automation backend
-   (originpro / COM session), the desktop GUI (PySide6), background workers,
-   and per-template Origin runner/service entry points.
-3. Changed behavior: rendering is performed entirely by the bundled
+2. The default matplotlib backend does not load the desktop GUI (PySide6) or any
+   Origin automation module. The Origin/OriginPro automation backend, background
+   workers, and per-template Origin runner/service entry points are redistributed
+   ONLY as an isolated, optional, vendored runtime under `origin_runtime/`
+   (see item 5); the main `.venv` never imports originpro / OriginExt.
+3. Changed behavior: default rendering is performed entirely by the bundled
    matplotlib engine and writes editable SVG plus high-resolution PNG/PDF.
-   FigFlow does not create Origin projects (.opju) and does not launch,
+   By default FigFlow does not create Origin projects (.opju) and does not launch,
    install, or require Origin or OriginPro.
 4. Added: the FigFlow application layer (CLI, deterministic intent-aware
    chart selector, renderer orchestration) and a one-click local setup.
+5. Added an OPTIONAL Origin backup backend (experimental). `origin_runtime/` is a
+   verbatim vendored copy of the upstream EditaPlot runtime (the `origin_sciplot`
+   package, including `origin_backend/`, `workers/`, and each template's
+   `runner.py` / `service.py`) plus `requirements-origin.txt`, with its own README.
+   It is source code only and ships no OriginLab binaries. It executes solely in a
+   separate product-managed `.venv-origin` (numpy 1.26 / pandas 2.3 /
+   matplotlib 3.10 / originpro 1.1.15 / OriginExt 1.2.5) via child processes, and
+   only after the user runs `setup.cmd --with-origin` (or `setup.cmd install-origin`)
+   and explicitly requests `draw --backend origin --confirm-licensed-origin`. A live
+   smoke test must report `passed` — meaning a non-empty editable `result.opju` is
+   actually saved — before any .opju is delivered; Learning/Trial or otherwise
+   project-save-restricted environments report `degraded` and are refused. FigFlow
+   never removes, patches, or bypasses the Origin demo watermark or any licensing.
 
 The original EditaPlot NOTICE is reproduced below in accordance with the
 License.
@@ -60,7 +75,11 @@ FigFlow likewise:
 - produces no watermark because its figures are rendered directly with
   open-source matplotlib, not because any watermark was removed from Origin.
 
-Third-party open-source dependencies (numpy, pandas, matplotlib, openpyxl,
-xlrd, Pillow, PyYAML, jsonschema and their transitive dependencies) are
-licensed by their respective copyright holders under their own OSI-approved
-licenses. See requirements.txt for the pinned versions.
+Third-party open-source dependencies for the default backend (numpy, pandas,
+matplotlib, openpyxl, xlrd, Pillow, PyYAML, jsonschema and their transitive
+dependencies) are licensed by their respective copyright holders under their own
+OSI-approved licenses; see requirements.txt for the pinned versions. The optional
+Origin backend additionally uses originpro and OriginExt (pinned in
+origin_runtime/requirements-origin.txt), installed only into the separate
+`.venv-origin`; Origin/OriginPro itself is a commercial product of OriginLab
+Corporation and is NOT included.

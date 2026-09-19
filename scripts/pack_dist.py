@@ -16,14 +16,26 @@ PARENT = PRODUCT_ROOT.parent
 VERSION = "0.1.0"
 OUT_ZIP = PARENT / f"FigFlow-v{VERSION}.zip"
 
-EXCLUDE_DIR_NAMES = {".venv", "venv", "__pycache__", ".git", ".pytest_cache"}
+EXCLUDE_DIR_NAMES = {
+    ".venv",
+    ".venv-origin",
+    "venv",
+    "__pycache__",
+    ".git",
+    ".pytest_cache",
+    ".origin-smoke-out",
+}
+EXCLUDE_FILE_NAMES = {".origin-smoke.json"}
 EXCLUDE_SUFFIXES = {".pyc"}
 
 
-def should_skip(path: Path) -> bool:
-    if any(part in EXCLUDE_DIR_NAMES for part in path.parts):
+def should_skip(rel: Path) -> bool:
+    # `rel` is the file path relative to PRODUCT_ROOT (caller already relativized it).
+    if any(part in EXCLUDE_DIR_NAMES for part in rel.parts):
         return True
-    return path.suffix in EXCLUDE_SUFFIXES
+    if rel.name in EXCLUDE_FILE_NAMES:
+        return True
+    return rel.suffix in EXCLUDE_SUFFIXES
 
 
 def main() -> int:
@@ -41,15 +53,32 @@ def main() -> int:
     size_mb = OUT_ZIP.stat().st_size / 1024 / 1024
     print(f"packed {len(files)} files -> {OUT_ZIP} ({size_mb:.2f} MB)")
     must_have = ["LICENSE", "NOTICE", "README.md", "setup.cmd", "requirements.txt",
-                 "figflow/cli.py", "engine/templates/nmr/manifest.yaml"]
+                 "figflow/cli.py", "figflow/origin_link.py",
+                 "engine/templates/nmr/manifest.yaml",
+                 "origin_runtime/README.md", "origin_runtime/requirements-origin.txt",
+                 "origin_runtime/src/origin_sciplot/project_paths.py",
+                 "origin_runtime/templates/nmr/manifest.yaml"]
     with zipfile.ZipFile(OUT_ZIP) as zf:
         names = set(zf.namelist())
         for rel in must_have:
             hit = f"{PRODUCT_ROOT.name}/{rel}"
             print(("  OK  " if hit in names else "  MISSING ") + rel)
             assert hit in names, rel
-        bad = [n for n in names if "/.venv/" in n or n.endswith(".pyc")]
-        assert not bad, f"leaked excluded files: {bad[:3]}"
+        bad = [
+            n
+            for n in names
+            if "/.venv/" in n
+            or "/.venv-origin/" in n
+            or "/.origin-smoke-out/" in n
+            or n.endswith(".pyc")
+            or n.endswith("/.origin-smoke.json")
+        ]
+        assert not bad, f"leaked excluded files: {bad[:5]}"
+        # The optional backend ships source only: never bundle Origin binaries
+        # or Learning/Trial watermarked smoke exports.
+        forbidden_ext = (".exe", ".dll", ".pyd", ".opju", ".opj", ".tif")
+        leaked_bin = [n for n in names if n.lower().endswith(forbidden_ext)]
+        assert not leaked_bin, f"unexpected binary asset in package: {leaked_bin[:5]}"
     print("PACKAGE VERIFIED")
     return 0
 

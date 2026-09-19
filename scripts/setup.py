@@ -31,6 +31,11 @@ VENV_PY = VENV_DIR / "Scripts" / "python.exe"
 REQUIREMENTS = PRODUCT_ROOT / "requirements.txt"
 SKILL_SRC = PRODUCT_ROOT / "skill" / "figflow"
 
+# Optional, separate Origin backend (never mixed with the main .venv).
+ORIGIN_VENV_DIR = PRODUCT_ROOT / ".venv-origin"
+ORIGIN_VENV_PY = ORIGIN_VENV_DIR / "Scripts" / "python.exe"
+ORIGIN_REQUIREMENTS = PRODUCT_ROOT / "origin_runtime" / "requirements-origin.txt"
+
 # Exit code that tells setup.cmd "this base interpreter is unsuitable, try the next".
 WRONG_INTERPRETER = 40
 
@@ -84,6 +89,37 @@ def doctor() -> None:
         raise SystemExit("doctor 未通过，请根据上面的提示排查。")
 
 
+def create_origin_venv(clean: bool = False) -> None:
+    if clean and ORIGIN_VENV_DIR.exists():
+        import shutil
+
+        shutil.rmtree(ORIGIN_VENV_DIR)
+    if ORIGIN_VENV_PY.exists():
+        print(f"[ok] 复用已有 Origin 后端环境: {ORIGIN_VENV_DIR}")
+        return
+    if not ORIGIN_REQUIREMENTS.is_file():
+        raise SystemExit("未找到 origin_runtime/requirements-origin.txt，无法安装可选 Origin 后端。")
+    print(f"[origin] 创建独立的 Origin 后端环境: {ORIGIN_VENV_DIR}")
+    builder = venv.EnvBuilder(with_pip=True, clear=False, upgrade_deps=False)
+    builder.create(str(ORIGIN_VENV_DIR))
+    if not ORIGIN_VENV_PY.exists():
+        raise SystemExit("Origin 后端环境创建失败，未找到 .venv-origin\\Scripts\\python.exe")
+
+
+def install_origin_dependencies() -> None:
+    print("[origin] 安装 originpro/OriginExt 及其锁定依赖（独立环境，不影响主环境）...")
+    code = run([ORIGIN_VENV_PY, "-m", "pip", "install", "--upgrade", "pip"], quiet=True)
+    if code != 0:
+        raise SystemExit("Origin 环境 pip 自升级失败，请检查网络后重试。")
+    code = run([ORIGIN_VENV_PY, "-m", "pip", "install", "-r", ORIGIN_REQUIREMENTS])
+    if code != 0:
+        raise SystemExit("Origin 后端依赖安装失败，请检查网络后重试。")
+    print(
+        "[origin] 可选 Origin 后端依赖安装完成。注意：能否导出无水印 .opju "
+        "仍取决于本机是否已激活正版 Origin/OriginPro（可用 figflow origin-smoke 自检）。"
+    )
+
+
 def _doubao_skill_dirs() -> list[Path]:
     local = os.environ.get("LOCALAPPDATA")
     if not local:
@@ -134,9 +170,14 @@ def main() -> int:
         "command",
         nargs="?",
         default="all",
-        choices=["all", "install-skill", "doctor"],
+        choices=["all", "install-skill", "install-origin", "doctor"],
     )
-    parser.add_argument("--clean", action="store_true", help="删除并重建 .venv")
+    parser.add_argument("--clean", action="store_true", help="删除并重建 .venv（配合 install-origin 时重建 .venv-origin）")
+    parser.add_argument(
+        "--with-origin",
+        action="store_true",
+        help="额外安装可选的 Origin 备份后端（独立 .venv-origin；仍需本机自备正版激活的 Origin）",
+    )
     parser.add_argument(
         "--no-skill",
         action="store_true",
@@ -155,10 +196,19 @@ def main() -> int:
         install_skill()
         return 0
 
+    if args.command == "install-origin":
+        check_base_interpreter()
+        create_origin_venv(args.clean)
+        install_origin_dependencies()
+        return 0
+
     check_base_interpreter()
     create_venv(args.clean)
     install_dependencies()
     doctor()
+    if args.with_origin:
+        create_origin_venv(args.clean)
+        install_origin_dependencies()
     skill_ok = False if args.no_skill else install_skill()
     print("\n=== FigFlow 安装完成 ===")
     print(f"产品目录 : {PRODUCT_ROOT}")
@@ -169,6 +219,12 @@ def main() -> int:
         print("豆包指令 : 已注册，直接对豆包说“用 FigFlow 把这个数据画成图”即可。")
     else:
         print("豆包指令 : 装好豆包后运行 setup.cmd install-skill 即可一句话调用。")
+    if args.with_origin:
+        print("Origin 后端: 已安装（独立 .venv-origin）。自检: figflow.cmd origin-smoke")
+        print("            出工程: figflow.cmd draw <文件> --backend origin --confirm-licensed-origin")
+    else:
+        print("Origin 后端: 默认无需安装。需要 .opju 备份方案时可运行 setup.cmd install-origin")
+        print("            （仍需本机自备已激活的正版 Origin/OriginPro，FigFlow 不破解、不去水印）。")
     return 0
 
 

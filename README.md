@@ -90,11 +90,18 @@ FigFlow/
 ├─ README.md
 ├─ scripts/setup.py       安装引导（建 venv、装依赖、doctor、注册 Skill）
 ├─ figflow/               FigFlow 应用层（env / selector / render / cli）
-├─ engine/                自包含渲染引擎（源自 editaplot 的纯 Python 核心）
+├─ engine/                默认 matplotlib 渲染引擎（源自 editaplot 的纯 Python 核心）
 │  ├─ src/origin_sciplot/ 数据分析/选型/配色/matplotlib 渲染（无 Origin/GUI 模块）
 │  └─ templates/          40 个图种规格（manifest/schema/示例/契约，均可直接渲染）
+├─ origin_runtime/        【可选】vendored 的 Origin 备份后端源码（实验性；默认不装/不加载）
+│  ├─ src/origin_sciplot/ 上游完整运行时（origin_backend/workers/各模板 runner）
+│  ├─ templates/          上游模板规格（含 Origin runner/service）
+│  └─ requirements-origin.txt  独立 .venv-origin 的锁定依赖（originpro/OriginExt 等）
 └─ skill/figflow/         豆包 Skill 模板（安装时复制进豆包目录）
 ```
+
+> 需要 `.opju` 备份方案（自备正版 Origin）才装可选后端：`setup.cmd install-origin`；
+> 普通用户无需理会 `origin_runtime/`，主程序安装与出图完全不依赖它。
 
 ---
 
@@ -143,16 +150,17 @@ OriginLab EULA，FigFlow 不做、也不能被用于此目的。
 **Q3：我就是需要 `.opju`，要在 Origin 里继续做峰拟合、和组里 Origin 流程对接，怎么办？**
 这类需求本质上需要一份**正版激活的 OriginLab 授权**——任何工具都无法在用户没有正版 Origin
 的情况下，合法产出可用的 `.opju`。FigFlow **不会、也不能**通过破解或补丁去满足它。
-你可以：① 使用正版 Origin，并把 FigFlow 当作快速选图/初稿工具；② 等待下方“可选 Origin
-后端”，在你本机已有正版 Origin 时额外导出 `.opju`。
+你可以：① 使用正版 Origin，并把 FigFlow 当作快速选图/初稿工具；② 使用内置的
+**实验性可选 Origin 后端**（见第八节），在你本机已有正版 Origin 时额外导出 `.opju`。
 
 **Q4：不用 Origin，矢量图拿什么改？**
 `result.svg` 是标准矢量格式，免费的 **Inkscape**、Adobe Illustrator、 PowerPoint 都能打开，
 可直接改文字、颜色、线宽、版式；不方便手改时，改数据或换个 `--intent` 让 FigFlow 重画即可。
 
 **Q5：已经装了正版 Origin 的人能用 FigFlow 吗？**
-能。当前版本独立产出 SVG/PNG/PDF，与 Origin 互不影响；未来的“可选 Origin 后端”只会在
-**检测到本机已安装并激活的正版 Origin** 时才点亮，绝不捆绑、不安装、不破解 Origin。
+能。默认 matplotlib 后端独立产出 SVG/PNG/PDF，与 Origin 互不影响。若你需要 `.opju`，
+内置的**实验性可选 Origin 后端**只会在**自检确认本机能真正保存工程（正版激活）**时才导出，
+绝不捆绑、不安装、不破解 Origin；学习/试用版会被自检拦下（见第八节）。
 
 ---
 
@@ -160,15 +168,56 @@ OriginLab EULA，FigFlow 不做、也不能被用于此目的。
 
 **当前边界**
 
-- 不产出 Origin 工程文件（`.opju`）；可编辑性由 SVG 承担。
+- 默认（matplotlib）后端不产出 Origin 工程文件（`.opju`）；可编辑性由 SVG 承担。
+  只有**实验性可选 Origin 后端**在自检 `passed`（正版可存工程）时才额外产出 `.opju`。
 - 不安装、不修改、不绕过任何 Origin 授权或水印；不含 OriginLab 软件/模板/Logo 素材。
 - 当前为 MVP：自动选图覆盖 40 类图种，关键图建议走 `recommend → 人工确认 → draw` 流程。
 - 平台：64 位 Windows + Python 3.11/3.12；macOS/Linux 暂不支持。
 
+**已内置（实验性，等待正版机验证后转 stable）**
+
+- **可选正版 Origin 后端（opt-in）**：见第八节。独立环境、默认不安装、不导入；仅在用户
+  显式启用且自检确认正版可保存工程时，通过官方 `originpro` 额外导出 `.opju`。学习/试用版
+  自检为 `degraded`，会被直接拦截，不产出带水印成果、不去水印。
+
 **规划中（Roadmap）**
 
-- **可选正版 Origin 后端（opt-in）**：仅当检测到本机已安装并激活的正版 Origin/OriginPro
-  时才启用，通过官方 `originpro` 接口在 matplotlib 产物之外**额外导出 `.opju`**，方便已有
-  授权、需要与课题组 Origin 流程对接的用户。该功能不捆绑、不安装、不破解 Origin，
-  未检测到正版时保持纯 matplotlib 路线、不影响免费用户。
+- 在真实正版 Origin 机器上完成端到端验证后，把该后端从 experimental 转为 stable。
 - 更多图种与双语（中英）界面、图形化安装器等。
+
+---
+
+## 八、可选 Origin 备份后端（实验性，需自备正版 Origin）
+
+面向**少数必须拿到 `.opju`、且本机已装正版激活 Origin/OriginPro 2021+** 的用户。它与主线
+完全隔离：默认安装不含它，主 `.venv` 也永远不会加载 originpro。
+
+**安装（可选，会另建一个独立环境 `.venv-origin`，不影响主环境）**
+
+```bat
+setup.cmd install-origin        :: 只装可选后端
+setup.cmd --with-origin         :: 装主程序的同时一并装上
+```
+
+**先自检（会启动一个专用的隐藏 Origin 实例，约 1–3 分钟，不改动你的数据）**
+
+```bat
+figflow.cmd origin-smoke
+```
+
+- `status = passed`：能连接、能导出，且**真正存出了非空 `result.opju`** —— 正版环境，可继续。
+- `status = degraded`：能连、能导出 PNG/PDF/TIF，但**工程保存受限（典型为学习/试用版）**。
+  此时 FigFlow 会拒绝产出 `.opju`，也不会去除 demo 水印；请改用默认 matplotlib 后端获取无水印图。
+
+**在正版环境出工程（必须显式声明确认为正版）**
+
+```bat
+figflow.cmd draw "D:\data\nmr.csv" --template nmr --backend origin --confirm-licensed-origin
+```
+
+成功后在源文件旁的 `<文件名>_FigFlow-Origin_<时间戳>` 目录得到 `result.opju` 与 PNG/PDF/TIF。
+退出码约定：`5`=未做正版声明；`6`=自检判定为学习/试用等受限环境（已拦截）；`4`=Origin 技术错误。
+
+> 说明：该后端当前标记为 **experimental**，因为开发者手中只有学习版测试机，已验证
+> “独立环境、连接、建图、导出、degraded 门控拦截”全链路，但“正版无水印 `.opju`”需在
+> 真实正版机由用户自检 `passed` 后才成立。FigFlow 不附带、不安装、不破解 Origin。

@@ -1,4 +1,7 @@
 .venv/
+.venv-origin/
+.origin-smoke-out/
+.origin-smoke.json
 __pycache__/
 *.pyc
 *.egg-info/

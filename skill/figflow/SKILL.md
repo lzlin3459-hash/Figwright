@@ -1,6 +1,6 @@
 ---
 name: figflow
-description: Analyze a local scientific table (CSV/TXT/XLS/XLSX) and turn it into a publication-informed, watermark-free figure with AI-driven chart selection; output editable SVG plus high-resolution PNG and PDF, fully local, with no Origin required. Use when a user drops in data and asks to draw/plot/chart it in natural language, or asks for NMR, XRD, XPS, FTIR, UV-Vis, DSC, EIS, LSV, CV, PL, bar, scatter, line, histogram, box/violin/raincloud, pie, heatmap, sankey, radar, forest, bubble, ROC/calibration/decision curves, SHAP, 3D trajectory, and similar scientific or statistical charts. Do not use on macOS/Linux; do not install or launch Origin; do not produce .opju.
+description: Analyze a local scientific table (CSV/TXT/XLS/XLSX) and turn it into a publication-informed, watermark-free figure with AI-driven chart selection; output editable SVG plus high-resolution PNG and PDF, fully local, with no Origin required. Use when a user drops in data and asks to draw/plot/chart it in natural language, or asks for NMR, XRD, XPS, FTIR, UV-Vis, DSC, EIS, LSV, CV, PL, bar, scatter, line, histogram, box/violin/raincloud, pie, heatmap, sankey, radar, forest, bubble, ROC/calibration/decision curves, SHAP, 3D trajectory, and similar scientific or statistical charts. Do not use on macOS/Linux. By default never install/launch Origin and produce no .opju (pure matplotlib, watermark-free); use the optional experimental `origin` backend ONLY when the user explicitly needs an editable .opju AND affirms a locally installed, activated licensed Origin/OriginPro 2021+ — it is gated by `figflow origin-smoke` (Learning/Trial = degraded = refused), and never removes any watermark.
 ---
 
 # FigFlow
@@ -45,6 +45,23 @@ demo 水印；矢量产物是 SVG（可用 Inkscape/Illustrator 编辑文字与�
 
 想浏览全部图种时用 `figflow.cmd catalog`（可 `--family <族>` 过滤）。
 
+## 可选：Origin 工程后端（仅当用户明确要 `.opju`）
+
+默认永远走上面的 matplotlib 路径（无水印）。**只有**当用户明确说“我必须要能在 Origin 里打开的
+`.opju` 工程文件”，并确认本机已安装并激活**正版 Origin/OriginPro 2021+** 时，才考虑可选后端；
+不要主动推荐，也不要为“去水印”使用它。
+
+1. 若 `doctor` 的 `origin_backend.environment.installed` 不为 true，提示用户运行一次
+   `setup.cmd install-origin`（独立环境，仅安装时联网）。
+2. 先跑 `figflow.cmd origin-smoke`，把 JSON 的 `status` 作为唯一依据：
+   - `passed`（能真正存出非空 `result.opju`）→ 正版环境，可继续；
+   - `degraded`（学习/试用、工程保存受限）→ **停止**，明确告知无法产出正式 `.opju`、FigFlow
+     不去水印；引导用户改用默认 matplotlib 出无水印图。不要尝试任何绕过。
+3. 仅在 `passed` 后出工程（必须带正版声明标志）：
+   `figflow.cmd draw "<文件>" --template <id> --backend origin --confirm-licensed-origin`。
+   退出码 `5`=未声明正版、`6`=自检 degraded 已拦截、`4`=Origin 技术错误。
+4. 该后端为 **experimental**：如实告知用户，不要把学习版导出的带水印 PNG 当成果。
+
 ## 科学与数据边界
 
 - 源文件只读：绝不改写、补全缺失列或编造数据。
@@ -59,4 +76,6 @@ demo 水印；矢量产物是 SVG（可用 Inkscape/Illustrator 编辑文字与�
 - 写入：源文件旁的产物目录，以及 FigFlow 产品目录。
 - 网络：仅一次性 `setup.cmd` 安装依赖时使用；出图全程离线、不上传数据。
 - 仅支持 64 位 Windows + Python 3.11/3.12；不支持 macOS/Linux/虚拟机出图链路。
-- 不安装、不修改、不绕过任何 Origin/OriginPro 授权；无水印来自 matplotlib 原生渲染，而非去除水印。
+- 默认后端不安装、不修改、不绕过任何 Origin/OriginPro 授权；无水印来自 matplotlib 原生渲染，而非去除水印。
+- 可选 Origin 后端只在用户明确要 `.opju`、声明确有正版、且 `origin-smoke` 为 `passed` 时使用；
+  学习/试用（degraded）一律拒绝，绝不去除 demo 水印或破解授权。
