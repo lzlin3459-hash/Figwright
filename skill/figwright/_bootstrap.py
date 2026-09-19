@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """ASCII-safe bridge installed into the Doubao Skill folder.
 
-The Skill directory itself lives under an ASCII path, but the FigFlow product
+The Skill directory itself lives under an ASCII path, but the Figwright product
 and its venv may sit in a path containing Chinese characters. A batch file
 stores such a path as raw bytes and breaks on GBK/936 machines. So the .cmd
 launcher stays pure-ASCII and only invokes this file with the ``py`` launcher;
@@ -20,15 +20,15 @@ from pathlib import Path
 
 
 def main() -> int:
-    cfg_path = Path(__file__).resolve().with_name("figflow-home.json")
+    cfg_path = Path(__file__).resolve().with_name("figwright-home.json")
     cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
     venv_python = cfg["venv_python"]
     product_home = cfg["product_home"]
 
     if not Path(venv_python).is_file():
         sys.stderr.write(
-            f"[FigFlow] venv python not found: {venv_python}\n"
-            "Please run setup.cmd in the FigFlow folder again.\n"
+            f"[Figwright] venv python not found: {venv_python}\n"
+            "Please run setup.cmd in the Figwright folder again.\n"
         )
         return 2
 
@@ -38,7 +38,7 @@ def main() -> int:
     env["PYTHONPATH"] = product_home + os.pathsep + env.get("PYTHONPATH", "")
 
     completed = subprocess.run(
-        [venv_python, "-m", "figflow", *sys.argv[1:]],
+        [venv_python, "-m", "figwright", *sys.argv[1:]],
         env=env,
     )
     return completed.returncode

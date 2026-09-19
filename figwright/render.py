@@ -28,7 +28,7 @@ def _sha256(path: Path) -> str:
 
 def _default_output_dir(source: Path) -> Path:
     stamp = _dt.datetime.now().strftime("%Y%m%d_%H%M%S")
-    return source.resolve().parent / f"{source.stem}_FigFlow_{stamp}"
+    return source.resolve().parent / f"{source.stem}_Figwright_{stamp}"
 
 
 def render(
@@ -113,7 +113,7 @@ def render(
         "output_dir": str(target),
         "files": files,
     }
-    (target / "figflow_report.json").write_text(
+    (target / "figwright_report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     if chosen_selector is not None:

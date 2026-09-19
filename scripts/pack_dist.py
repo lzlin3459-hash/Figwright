@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Pack a redistributable FigFlow zip (source only; the user runs setup.cmd).
+"""Pack a redistributable Figwright zip (source only; the user runs setup.cmd).
 
 Excludes the local virtual environment and Python caches. The recipient
 extracts the folder and double-clicks setup.cmd to build their own .venv.
@@ -14,7 +14,10 @@ from pathlib import Path
 PRODUCT_ROOT = Path(__file__).resolve().parents[1]
 PARENT = PRODUCT_ROOT.parent
 VERSION = "0.1.0"
-OUT_ZIP = PARENT / f"FigFlow-v{VERSION}.zip"
+# Distribution archive and its top-level folder use the public brand name,
+# independent of the local working-copy directory name.
+PKG_ROOT_NAME = "Figwright"
+OUT_ZIP = PARENT / f"{PKG_ROOT_NAME}-v{VERSION}.zip"
 
 EXCLUDE_DIR_NAMES = {
     ".venv",
@@ -47,13 +50,13 @@ def main() -> int:
 
     with zipfile.ZipFile(OUT_ZIP, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
         for path in files:
-            arcname = Path(PRODUCT_ROOT.name) / path.relative_to(PRODUCT_ROOT)
+            arcname = Path(PKG_ROOT_NAME) / path.relative_to(PRODUCT_ROOT)
             zf.write(path, arcname.as_posix())
 
     size_mb = OUT_ZIP.stat().st_size / 1024 / 1024
     print(f"packed {len(files)} files -> {OUT_ZIP} ({size_mb:.2f} MB)")
     must_have = ["LICENSE", "NOTICE", "README.md", "setup.cmd", "requirements.txt",
-                 "figflow/cli.py", "figflow/origin_link.py",
+                 "figwright/cli.py", "figwright/origin_link.py",
                  "engine/templates/nmr/manifest.yaml",
                  "origin_runtime/README.md", "origin_runtime/requirements-origin.txt",
                  "origin_runtime/src/origin_sciplot/project_paths.py",
@@ -61,7 +64,7 @@ def main() -> int:
     with zipfile.ZipFile(OUT_ZIP) as zf:
         names = set(zf.namelist())
         for rel in must_have:
-            hit = f"{PRODUCT_ROOT.name}/{rel}"
+            hit = f"{PKG_ROOT_NAME}/{rel}"
             print(("  OK  " if hit in names else "  MISSING ") + rel)
             assert hit in names, rel
         bad = [

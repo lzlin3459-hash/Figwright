@@ -1,5 +1,5 @@
-# FigFlow runtime dependencies — open source only.
-# No originpro / OriginExt / PySide6 / win32com: FigFlow never launches Origin.
+# Figwright runtime dependencies — open source only.
+# No originpro / OriginExt / PySide6 / win32com: Figwright never launches Origin.
 # Versions below are the exact set validated in a clean Origin-free environment.
 # Requires 64-bit CPython 3.11 or 3.12.
 numpy==2.5.3

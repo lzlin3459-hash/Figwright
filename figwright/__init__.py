@@ -1,4 +1,4 @@
-"""FigFlow — AI-driven, Origin-free scientific figure tool (MVP).
+"""Figwright — AI-driven, Origin-free scientific figure tool (MVP).
 
 Reuses the Apache-2.0 "brain" of editaplot (table detection, template
 semantics, palettes, publication styling) but renders with the bundled

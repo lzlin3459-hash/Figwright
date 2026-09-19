@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""FigFlow one-click bootstrap.
+"""Figwright one-click bootstrap.
 
 Creates a project-local virtual environment, installs the pinned open-source
 dependencies, verifies the engine with `doctor`, and (when Doubao is present)
-registers a local "figflow" Skill that points at this product folder.
+registers a local "figwright" Skill that points at this product folder.
 
 Run through setup.cmd, which only exists to locate a suitable base Python.
 """
@@ -29,7 +29,7 @@ PRODUCT_ROOT = Path(__file__).resolve().parents[1]
 VENV_DIR = PRODUCT_ROOT / ".venv"
 VENV_PY = VENV_DIR / "Scripts" / "python.exe"
 REQUIREMENTS = PRODUCT_ROOT / "requirements.txt"
-SKILL_SRC = PRODUCT_ROOT / "skill" / "figflow"
+SKILL_SRC = PRODUCT_ROOT / "skill" / "figwright"
 
 # Optional, separate Origin backend (never mixed with the main .venv).
 ORIGIN_VENV_DIR = PRODUCT_ROOT / ".venv-origin"
@@ -84,7 +84,7 @@ def install_dependencies() -> None:
 
 def doctor() -> None:
     print("[3/3] 环境自检 doctor ...")
-    code = run([VENV_PY, "-m", "figflow", "doctor"])
+    code = run([VENV_PY, "-m", "figwright", "doctor"])
     if code != 0:
         raise SystemExit("doctor 未通过，请根据上面的提示排查。")
 
@@ -116,7 +116,7 @@ def install_origin_dependencies() -> None:
         raise SystemExit("Origin 后端依赖安装失败，请检查网络后重试。")
     print(
         "[origin] 可选 Origin 后端依赖安装完成。注意：能否导出无水印 .opju "
-        "仍取决于本机是否已激活正版 Origin/OriginPro（可用 figflow origin-smoke 自检）。"
+        "仍取决于本机是否已激活正版 Origin/OriginPro（可用 figwright origin-smoke 自检）。"
     )
 
 
@@ -143,16 +143,16 @@ def install_skill() -> bool:
         print("[skip] 未检测到豆包本地 Skill 目录；安装豆包后可重跑: setup.cmd install-skill")
         return False
     for skills_root in targets:
-        dst = skills_root / "figflow"
+        dst = skills_root / "figwright"
         dst.mkdir(parents=True, exist_ok=True)
         # Skill instructions (UTF-8; read by Doubao, not by cmd).
         shutil.copyfile(SKILL_SRC / "SKILL.md", dst / "SKILL.md")
         # Pure-ASCII batch launcher plus its Unicode-safe Python bridge.
-        shutil.copyfile(SKILL_SRC / "figflow.cmd.template", dst / "figflow.cmd")
+        shutil.copyfile(SKILL_SRC / "figwright.cmd.template", dst / "figwright.cmd")
         shutil.copyfile(SKILL_SRC / "_bootstrap.py", dst / "_bootstrap.py")
         # Absolute (possibly Chinese) paths live only in this UTF-8 JSON,
         # which the bridge reads with Python — never inside the .cmd.
-        (dst / "figflow-home.json").write_text(
+        (dst / "figwright-home.json").write_text(
             json.dumps(
                 {"product_home": str(PRODUCT_ROOT), "venv_python": str(VENV_PY)},
                 ensure_ascii=False,
@@ -165,7 +165,7 @@ def install_skill() -> bool:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="FigFlow setup")
+    parser = argparse.ArgumentParser(description="Figwright setup")
     parser.add_argument(
         "command",
         nargs="?",
@@ -181,13 +181,13 @@ def main() -> int:
     parser.add_argument(
         "--no-skill",
         action="store_true",
-        help="只搭建本地环境，不注册豆包 Skill（命令行仍可用 figflow.cmd）",
+        help="只搭建本地环境，不注册豆包 Skill（命令行仍可用 figwright.cmd）",
     )
     args = parser.parse_args()
 
     if args.command == "doctor":
         check_base_interpreter()
-        return run([VENV_PY, "-m", "figflow", "doctor"])
+        return run([VENV_PY, "-m", "figwright", "doctor"])
 
     if args.command == "install-skill":
         check_base_interpreter()
@@ -210,21 +210,21 @@ def main() -> int:
         create_origin_venv(args.clean)
         install_origin_dependencies()
     skill_ok = False if args.no_skill else install_skill()
-    print("\n=== FigFlow 安装完成 ===")
+    print("\n=== Figwright 安装完成 ===")
     print(f"产品目录 : {PRODUCT_ROOT}")
-    print("直接使用 : FigFlow\\figflow.cmd doctor | catalog | recommend <文件> | draw <文件>")
+    print("直接使用 : Figwright\\figwright.cmd doctor | catalog | recommend <文件> | draw <文件>")
     if args.no_skill:
         print("豆包指令 : 已按 --no-skill 跳过注册；稍后可运行 setup.cmd install-skill 补注册。")
     elif skill_ok:
-        print("豆包指令 : 已注册，直接对豆包说“用 FigFlow 把这个数据画成图”即可。")
+        print("豆包指令 : 已注册，直接对豆包说“用 Figwright 把这个数据画成图”即可。")
     else:
         print("豆包指令 : 装好豆包后运行 setup.cmd install-skill 即可一句话调用。")
     if args.with_origin:
-        print("Origin 后端: 已安装（独立 .venv-origin）。自检: figflow.cmd origin-smoke")
-        print("            出工程: figflow.cmd draw <文件> --backend origin --confirm-licensed-origin")
+        print("Origin 后端: 已安装（独立 .venv-origin）。自检: figwright.cmd origin-smoke")
+        print("            出工程: figwright.cmd draw <文件> --backend origin --confirm-licensed-origin")
     else:
         print("Origin 后端: 默认无需安装。需要 .opju 备份方案时可运行 setup.cmd install-origin")
-        print("            （仍需本机自备已激活的正版 Origin/OriginPro，FigFlow 不破解、不去水印）。")
+        print("            （仍需本机自备已激活的正版 Origin/OriginPro，Figwright 不破解、不去水印）。")
     return 0
 
 

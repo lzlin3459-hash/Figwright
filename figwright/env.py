@@ -12,7 +12,7 @@ ENGINE_SRC = ENGINE_ROOT / "src"
 TEMPLATES_DIR = ENGINE_ROOT / "templates"
 
 # Pure-Python runtime dependencies. Deliberately excludes originpro / OriginExt
-# / PySide6 / win32com: FigFlow never launches Origin.
+# / PySide6 / win32com: Figwright never launches Origin.
 REQUIRED_PACKAGES = (
     ("numpy", "numpy"),
     ("pandas", "pandas"),

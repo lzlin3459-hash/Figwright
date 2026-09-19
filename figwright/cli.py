@@ -1,4 +1,4 @@
-"""FigFlow command-line interface (JSON to stdout)."""
+"""Figwright command-line interface (JSON to stdout)."""
 
 from __future__ import annotations
 
@@ -82,7 +82,7 @@ def _cmd_doctor(_args: argparse.Namespace) -> int:
     _emit(
         {
             "schema_version": "1.0",
-            "product": "FigFlow",
+            "product": "Figwright",
             "version": __version__,
             "ok": ready,
             "ready": ready,
@@ -190,7 +190,7 @@ def _cmd_draw_origin(args: argparse.Namespace, source: Path, formats: tuple[str,
             "origin_license_confirmation_required",
             "使用 --backend origin 前请确认本机已安装并激活正版 Origin/OriginPro 2021+，"
             "并追加 --confirm-licensed-origin。学习/试用版会带 demo 水印且无法保存工程；"
-            "FigFlow 不提供任何去除水印或绕过授权的手段，无水印请直接用默认 matplotlib 后端。",
+            "Figwright 不提供任何去除水印或绕过授权的手段，无水印请直接用默认 matplotlib 后端。",
             status=origin_link.RC_LICENSE_CONFIRMATION,
         )
 
@@ -204,9 +204,9 @@ def _cmd_draw_origin(args: argparse.Namespace, source: Path, formats: tuple[str,
         return _error(
             "origin_license_limited",
             f"最近一次自检（{checked}）为 degraded：当前 Origin 无法保存可编辑工程（典型为学习/试用版），"
-            "图片导出可能带 demo 水印。已停止，未生成正式产物。FigFlow 不去除水印；"
-            "请改用默认 `figflow draw`（matplotlib）获得无水印图，或在已激活正版 Origin 的电脑上"
-            "重新运行 figflow origin-smoke 后再用 --backend origin。",
+            "图片导出可能带 demo 水印。已停止，未生成正式产物。Figwright 不去除水印；"
+            "请改用默认 `figwright draw`（matplotlib）获得无水印图，或在已激活正版 Origin 的电脑上"
+            "重新运行 figwright origin-smoke 后再用 --backend origin。",
             status=origin_link.RC_ORIGIN_LIMITED,
             extra={"smoke_status": "degraded"},
         )
@@ -226,8 +226,8 @@ def _cmd_draw_origin(args: argparse.Namespace, source: Path, formats: tuple[str,
             return _error(
                 "origin_license_limited",
                 "自检结果为 degraded：当前 Origin 无法保存可编辑工程（典型为学习/试用版），"
-                "图片导出可能带 demo 水印。已停止，未生成正式产物。FigFlow 不去除水印；"
-                "请改用默认 `figflow draw`（matplotlib）获得无水印图，或在已激活正版 Origin 的电脑上使用。",
+                "图片导出可能带 demo 水印。已停止，未生成正式产物。Figwright 不去除水印；"
+                "请改用默认 `figwright draw`（matplotlib）获得无水印图，或在已激活正版 Origin 的电脑上使用。",
                 status=origin_link.RC_ORIGIN_LIMITED,
                 extra={"smoke_status": "degraded"},
             )
@@ -245,7 +245,7 @@ def _cmd_draw_origin(args: argparse.Namespace, source: Path, formats: tuple[str,
         return rc
 
     target = Path(args.output_dir) if args.output_dir else (
-        source.resolve().parent / f"{source.stem}_FigFlow-Origin_{_timestamp()}"
+        source.resolve().parent / f"{source.stem}_Figwright-Origin_{_timestamp()}"
     )
     try:
         origin_link.run_render(
@@ -291,7 +291,7 @@ def _cmd_draw_origin(args: argparse.Namespace, source: Path, formats: tuple[str,
         "note": "已确认为可保存工程的 Origin 环境；成品以你本机正版授权为准。",
         "source": {"file": source.name, "sha256": _sha256(source)},
     }
-    (target / "figflow_report.json").write_text(
+    (target / "figwright_report.json").write_text(
         json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     _emit(result)
@@ -371,7 +371,7 @@ def _cmd_draw(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="figflow", description="无水印 AI 科研绘图（本地、无需 Origin）")
+    parser = argparse.ArgumentParser(prog="figwright", description="无水印 AI 科研绘图（本地、无需 Origin）")
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("doctor", help="检查环境与依赖")

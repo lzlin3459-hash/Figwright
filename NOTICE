@@ -1,5 +1,5 @@
-FigFlow
-Copyright 2026 FigFlow contributors
+Figwright
+Copyright 2026 Figwright contributors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this product except in compliance with the License.
@@ -11,7 +11,7 @@ Copyright 2026 EditaPlot contributors
 Licensed under the Apache License, Version 2.0
 ================================================================================
 
-FigFlow is built on top of the Origin-independent analytical core of EditaPlot.
+Figwright is built on top of the Origin-independent analytical core of EditaPlot.
 Per the Apache License 2.0, this NOTICE retains the original copyright and
 records the following changes:
 
@@ -26,9 +26,9 @@ records the following changes:
    (see item 5); the main `.venv` never imports originpro / OriginExt.
 3. Changed behavior: default rendering is performed entirely by the bundled
    matplotlib engine and writes editable SVG plus high-resolution PNG/PDF.
-   By default FigFlow does not create Origin projects (.opju) and does not launch,
+   By default Figwright does not create Origin projects (.opju) and does not launch,
    install, or require Origin or OriginPro.
-4. Added: the FigFlow application layer (CLI, deterministic intent-aware
+4. Added: the Figwright application layer (CLI, deterministic intent-aware
    chart selector, renderer orchestration) and a one-click local setup.
 5. Added an OPTIONAL Origin backup backend (experimental). `origin_runtime/` is a
    verbatim vendored copy of the upstream EditaPlot runtime (the `origin_sciplot`
@@ -41,7 +41,7 @@ records the following changes:
    and explicitly requests `draw --backend origin --confirm-licensed-origin`. A live
    smoke test must report `passed` — meaning a non-empty editable `result.opju` is
    actually saved — before any .opju is delivered; Learning/Trial or otherwise
-   project-save-restricted environments report `degraded` and are refused. FigFlow
+   project-save-restricted environments report `degraded` and are refused. Figwright
    never removes, patches, or bypasses the Origin demo watermark or any licensing.
 
 The original EditaPlot NOTICE is reproduced below in accordance with the
@@ -67,7 +67,7 @@ are not redistributed. The palettes are not official specifications of Nature,
 Science, ACS, or any journal.
 --------------------------------------------------------------------------------
 
-FigFlow likewise:
+Figwright likewise:
 - is an independent project with no affiliation to OriginLab Corporation;
 - does not distribute any OriginLab software, binaries, templates, logos,
   artwork, trial builds, or watermark assets;

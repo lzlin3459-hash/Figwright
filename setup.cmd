@@ -15,12 +15,12 @@ for %%C in ("py -3.12" "py -3.11" "py -3" "python") do (
 )
 
 if not defined PY (
-  echo [FigFlow] No 64-bit Python 3.11 or 3.12 was found.
+  echo [Figwright] No 64-bit Python 3.11 or 3.12 was found.
   echo Please install 64-bit Python 3.12 from https://www.python.org/downloads/windows/
   echo tick "Add python.exe to PATH", then run setup.cmd again.
   exit /b 2
 )
 
-echo [FigFlow] Using base interpreter: %PY%
+echo [Figwright] Using base interpreter: %PY%
 %PY% scripts\setup.py %*
 exit /b %errorlevel%

@@ -112,7 +112,7 @@ def origin_env_report() -> dict[str, Any]:
         "except Exception as e:\n"
         "    v['import_error']=type(e).__name__+': '+str(e)[:200]\n"
         "v['originpro_external_automation']=ok\n"
-        "print('FIGFLOW_PROBE'+json.dumps(v)+'PROBE_END')\n"
+        "print('FIGWRIGHT_PROBE'+json.dumps(v)+'PROBE_END')\n"
     )
     try:
         proc = subprocess.run(
@@ -152,7 +152,7 @@ def origin_env_report() -> dict[str, Any]:
 
 
 def _extract_probe_json(stdout: str) -> dict[str, Any] | None:
-    marker_a, marker_b = "FIGFLOW_PROBE", "PROBE_END"
+    marker_a, marker_b = "FIGWRIGHT_PROBE", "PROBE_END"
     start = stdout.find(marker_a)
     end = stdout.find(marker_b, start + len(marker_a) if start >= 0 else 0)
     if start < 0 or end < 0:
