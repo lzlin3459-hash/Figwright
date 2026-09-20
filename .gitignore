@@ -2,6 +2,7 @@
 .venv-origin/
 .origin-smoke-out/
 .origin-smoke.json
+setup-log.txt
 __pycache__/
 *.pyc
 *.egg-info/

@@ -4,6 +4,11 @@
 
 Excludes the local virtual environment and Python caches. The recipient
 extracts the folder and double-clicks setup.cmd to build their own .venv.
+
+Windows batch launchers are normalized to CRLF while writing the archive,
+regardless of the working copy's line endings or git: a multi-line
+``for ... do (`` block with bare LF line endings can fail to parse in
+cmd.exe and makes a double-clicked setup.cmd appear to "do nothing".
 """
 
 from __future__ import annotations
@@ -28,8 +33,9 @@ EXCLUDE_DIR_NAMES = {
     ".pytest_cache",
     ".origin-smoke-out",
 }
-EXCLUDE_FILE_NAMES = {".origin-smoke.json"}
+EXCLUDE_FILE_NAMES = {".origin-smoke.json", "setup-log.txt"}
 EXCLUDE_SUFFIXES = {".pyc"}
+BATCH_SUFFIXES = (".cmd", ".bat")
 
 
 def should_skip(rel: Path) -> bool:
@@ -41,6 +47,17 @@ def should_skip(rel: Path) -> bool:
     return rel.suffix in EXCLUDE_SUFFIXES
 
 
+def is_batch(path: Path) -> bool:
+    name = path.name.lower()
+    return name.endswith(BATCH_SUFFIXES) or name.endswith(".cmd.template")
+
+
+def to_crlf(data: bytes) -> bytes:
+    text = data.decode("utf-8")
+    text = text.replace("\r\n", "\n").replace("\r", "\n").replace("\n", "\r\n")
+    return text.encode("utf-8")
+
+
 def main() -> int:
     files: list[Path] = []
     for path in PRODUCT_ROOT.rglob("*"):
@@ -50,8 +67,12 @@ def main() -> int:
 
     with zipfile.ZipFile(OUT_ZIP, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
         for path in files:
-            arcname = Path(PKG_ROOT_NAME) / path.relative_to(PRODUCT_ROOT)
-            zf.write(path, arcname.as_posix())
+            arcname = (Path(PKG_ROOT_NAME) / path.relative_to(PRODUCT_ROOT)).as_posix()
+            if is_batch(path):
+                # Guarantee Windows-correct line endings inside the archive.
+                zf.writestr(arcname, to_crlf(path.read_bytes()))
+            else:
+                zf.write(path, arcname)
 
     size_mb = OUT_ZIP.stat().st_size / 1024 / 1024
     print(f"packed {len(files)} files -> {OUT_ZIP} ({size_mb:.2f} MB)")
@@ -75,6 +96,7 @@ def main() -> int:
             or "/.origin-smoke-out/" in n
             or n.endswith(".pyc")
             or n.endswith("/.origin-smoke.json")
+            or n.endswith("/setup-log.txt")
         ]
         assert not bad, f"leaked excluded files: {bad[:5]}"
         # The optional backend ships source only: never bundle Origin binaries
@@ -82,6 +104,17 @@ def main() -> int:
         forbidden_ext = (".exe", ".dll", ".pyd", ".opju", ".opj", ".tif")
         leaked_bin = [n for n in names if n.lower().endswith(forbidden_ext)]
         assert not leaked_bin, f"unexpected binary asset in package: {leaked_bin[:5]}"
+        # Every Windows launcher inside the archive must be pure CRLF.
+        batch = [
+            n for n in names
+            if n.lower().endswith(BATCH_SUFFIXES) or n.endswith(".cmd.template")
+        ]
+        assert batch, "no Windows batch launcher found in package"
+        for n in batch:
+            b = zf.read(n)
+            assert b"\r\n" in b, f"batch without CRLF: {n}"
+            assert b.count(b"\n") == b.count(b"\r\n"), f"bare LF in batch: {n}"
+        print(f"  OK   {len(batch)} batch launchers verified CRLF")
     print("PACKAGE VERIFIED")
     return 0
 

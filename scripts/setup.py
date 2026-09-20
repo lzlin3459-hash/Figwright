@@ -26,6 +26,40 @@ for _stream in (sys.stdout, sys.stderr):
         pass
 
 PRODUCT_ROOT = Path(__file__).resolve().parents[1]
+LOG_PATH = PRODUCT_ROOT / "setup-log.txt"
+
+
+class _Tee:
+    """Mirror stdout/stderr to both the console and setup-log.txt."""
+
+    def __init__(self, console, logfile):
+        self._console = console
+        self._log = logfile
+
+    def write(self, data):
+        for stream in (self._console, self._log):
+            try:
+                stream.write(data)
+            except Exception:  # noqa: BLE001
+                pass
+        self.flush()
+
+    def flush(self):
+        for stream in (self._console, self._log):
+            try:
+                stream.flush()
+            except Exception:  # noqa: BLE001
+                pass
+
+    def __getattr__(self, name):
+        return getattr(self._console, name)
+
+
+_log_handle = LOG_PATH.open("a", encoding="utf-8")
+_log_handle.write("\n===== Figwright setup run =====\n")
+sys.stdout = _Tee(sys.stdout, _log_handle)
+sys.stderr = _Tee(sys.stderr, _log_handle)
+
 VENV_DIR = PRODUCT_ROOT / ".venv"
 VENV_PY = VENV_DIR / "Scripts" / "python.exe"
 REQUIREMENTS = PRODUCT_ROOT / "requirements.txt"
