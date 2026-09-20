@@ -33,8 +33,8 @@ class _Tee:
     """Mirror stdout/stderr to both the console and setup-log.txt."""
 
     def __init__(self, console, logfile):
-        self._console = console
-        self._log = logfile
+        object.__setattr__(self, "_console", console)
+        object.__setattr__(self, "_log", logfile)
 
     def write(self, data):
         for stream in (self._console, self._log):
@@ -52,13 +52,30 @@ class _Tee:
                 pass
 
     def __getattr__(self, name):
-        return getattr(self._console, name)
+        return getattr(object.__getattribute__(self, "_console"), name)
 
 
-_log_handle = LOG_PATH.open("a", encoding="utf-8")
-_log_handle.write("\n===== Figwright setup run =====\n")
-sys.stdout = _Tee(sys.stdout, _log_handle)
-sys.stderr = _Tee(sys.stderr, _log_handle)
+# Logging is best-effort and must never make setup crash (e.g. when the
+# product was extracted into a read-only folder such as Program Files).
+_log_handle = None
+try:
+    _log_handle = LOG_PATH.open("a", encoding="utf-8")
+    _log_handle.write("\n===== Figwright setup run =====\n")
+    sys.stdout = _Tee(sys.stdout, _log_handle)
+    sys.stderr = _Tee(sys.stderr, _log_handle)
+except Exception:  # noqa: BLE001
+    _log_handle = None
+
+
+def _log_line(line: str) -> None:
+    """Write one line to setup-log.txt only (used for quiet child output)."""
+    if _log_handle is None:
+        return
+    try:
+        _log_handle.write(str(line).rstrip("\r\n") + "\n")
+        _log_handle.flush()
+    except Exception:  # noqa: BLE001
+        pass
 
 VENV_DIR = PRODUCT_ROOT / ".venv"
 VENV_PY = VENV_DIR / "Scripts" / "python.exe"
@@ -86,9 +103,30 @@ def check_base_interpreter() -> None:
 
 
 def run(cmd: list[str], *, quiet: bool = False) -> int:
-    if not quiet:
-        print(">", " ".join(str(c) for c in cmd))
-    return subprocess.call([str(c) for c in cmd])
+    shown = " ".join(str(c) for c in cmd)
+    if quiet:
+        _log_line(f"> {shown}")
+    else:
+        print(">", shown)
+    # Merge child stdout/stderr and forward line by line through Python, so
+    # pip/doctor output is captured in setup-log.txt (not only on screen).
+    proc = subprocess.Popen(
+        [str(c) for c in cmd],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        bufsize=1,
+    )
+    assert proc.stdout is not None
+    for line in proc.stdout:
+        line = line.rstrip("\r\n")
+        if quiet:
+            _log_line(line)
+        else:
+            print(line)  # _Tee mirrors this to setup-log.txt
+    return proc.wait()
 
 
 def create_venv(clean: bool) -> None:
@@ -182,7 +220,12 @@ def install_skill() -> bool:
         # Skill instructions (UTF-8; read by Doubao, not by cmd).
         shutil.copyfile(SKILL_SRC / "SKILL.md", dst / "SKILL.md")
         # Pure-ASCII batch launcher plus its Unicode-safe Python bridge.
-        shutil.copyfile(SKILL_SRC / "figwright.cmd.template", dst / "figwright.cmd")
+        # Normalize the launcher to CRLF on write: a git checkout may carry
+        # LF (.cmd.template is not covered by *.cmd in .gitattributes), and a
+        # bare-LF batch can mis-parse in cmd.exe on some machines.
+        launcher = (SKILL_SRC / "figwright.cmd.template").read_text(encoding="utf-8")
+        launcher = launcher.replace("\r\n", "\n").replace("\r", "\n").replace("\n", "\r\n")
+        (dst / "figwright.cmd").write_text(launcher, encoding="utf-8", newline="")
         shutil.copyfile(SKILL_SRC / "_bootstrap.py", dst / "_bootstrap.py")
         # Absolute (possibly Chinese) paths live only in this UTF-8 JSON,
         # which the bridge reads with Python — never inside the .cmd.
