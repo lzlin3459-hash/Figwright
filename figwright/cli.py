@@ -13,7 +13,7 @@ from typing import Any
 import yaml
 
 from . import __version__, env, origin_link
-from .render import DEFAULT_FORMATS, render
+from .render import DEFAULT_FORMATS, MAX_DPI, MIN_DPI, render
 from .selector import recommend
 
 
@@ -336,6 +336,11 @@ def _cmd_origin_smoke(args: argparse.Namespace) -> int:
 
 
 def _cmd_draw(args: argparse.Namespace) -> int:
+    if not (MIN_DPI <= args.dpi <= MAX_DPI):
+        return _error(
+            "invalid_dpi",
+            f"--dpi 需为 {MIN_DPI}–{MAX_DPI} 之间的整数（常用 300，高质量线稿可用 600）；收到 {args.dpi}。",
+        )
     if not env.engine_ok():
         return _error("engine_unavailable", "引擎缺失或依赖不完整，请先运行 setup/doctor。")
     formats = tuple(f.strip() for f in args.formats.split(",") if f.strip())

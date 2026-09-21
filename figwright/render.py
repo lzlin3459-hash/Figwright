@@ -17,6 +17,23 @@ from . import env, selector
 
 DEFAULT_FORMATS = ("png", "svg", "pdf")
 
+# Export resolution guard. Below 1 matplotlib itself rejects the value; the
+# upper bound prevents an accidental huge --dpi from allocating enormous
+# embedded bitmaps (imshow grids/colorbars in SVG/PDF) and running out of
+# memory. 1200 already covers the strictest line-art journal requests.
+MIN_DPI = 1
+MAX_DPI = 1200
+
+
+def _validate_dpi(dpi: Any) -> int:
+    if isinstance(dpi, bool) or not isinstance(dpi, int):
+        raise ValueError("--dpi 必须是整数（常用 300，线稿可用 600）。")
+    if not (MIN_DPI <= dpi <= MAX_DPI):
+        raise ValueError(
+            f"--dpi 需在 {MIN_DPI}–{MAX_DPI} 之间（常用 300，高质量线稿可用 600）。"
+        )
+    return dpi
+
 
 def _sha256(path: Path) -> str:
     digest = hashlib.sha256()
@@ -41,6 +58,7 @@ def render(
     dpi: int = 300,
     strict: bool = False,
 ) -> dict[str, Any]:
+    dpi = _validate_dpi(dpi)
     env.ensure_engine_on_path()
     from origin_sciplot.scientific_workflow import prepare_scientific
 
