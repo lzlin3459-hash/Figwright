@@ -76,9 +76,13 @@ def render(
     files: dict[str, str] = {}
     for ext in formats:
         ext = ext.lower()
-        kwargs = {"dpi": dpi} if ext == "png" else {}
         out_path = target / f"result.{ext}"
-        figure.savefig(out_path, format=ext, bbox_inches="tight", **kwargs)
+        # Pass dpi for every backend. For PNG it sets the export resolution;
+        # the SVG/PDF backends derive their embedded-image rasterization dpi
+        # from the (temporarily set) figure dpi, so without it dense imshow
+        # color grids and continuous colorbars fell back to ~100 dpi. Vector
+        # geometry and <text> are dpi-independent and stay fully editable.
+        figure.savefig(out_path, format=ext, bbox_inches="tight", dpi=dpi)
         files[ext] = str(out_path)
     plt.close(figure)
 
